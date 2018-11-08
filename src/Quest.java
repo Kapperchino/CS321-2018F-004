@@ -7,7 +7,7 @@ class Quest extends  {
     private final int questID;
     private final String questName;
     private Graph <Task> tasks;
-    
+    private ArrayList<int> activeTasks;
     public class Task {
         private final int taskNumber;
         private boolean Completed; 
@@ -20,6 +20,7 @@ class Quest extends  {
             this.isFinalNode = isFinalNode;
             this.isCompletableOutOfOrder = false;
         }
+        public int getTaskNumber(){ return this.taskNumber; }
         public MoveTask(int taskNumber, boolean isFinalNode, String location) {
             this = new Task(taskNumber, isFinalNode);
             this.completionReq = new MoveEvent(location);
@@ -64,9 +65,38 @@ class Quest extends  {
     }
     
     public Quest(int questID, String questName, Graph<Task> tasks){
-        tasks = new 
+        tasks = null; //Patricks part. 
+        while(THEREAREMORETASKSTOREAD){
+            ArrayList inbound = new ArrayList<int>(); //TaskNumbers of all tasks that route to this new node. Should be stored in the file. Cycles will break this system
+            Task t = new Task(VALUESFROMFILE);
+            tasks.add(t);
+            int i = inbound.size();
+            while(i>0) {
+                tasks.connect(inbound(i),t);
+                i--;
+            }
+            if(t.isCompletableOutOfOrder){
+                activeTasks.add(t.getTaskNumber);
+            }
+        }
+        questID = null;
+        questName = null;
+        activeTasks = new ArrayList<int>();
+        activeTasks.add(); //I need the head node to be added here. 
+         
+    
 
     }
-    
-    public 
+    //Iterates through the graph looking for the task of the paramter taskID, returns null if not found.  
+    public Task getTask(int taskID) {
+        Iterator it = tasks.iterator(); //Damn you java! I want pointers so i dont need o(n) runtime for something that should be o(1)!
+        Task next = null;
+        while(it.hasNext()){
+            next = it.next();
+            if(next.getTaskNumber()==taskID) {
+                return next;
+            }
+        }
+        return null;
+    }
 }
