@@ -38,7 +38,7 @@ public class Player {
     private boolean hasOption = false;
     @JsonProperty("recovery")
     private ArrayList<String> recovery;
-    
+    private ArrayList<Quest> quests;    
     
 	public Player(@JsonProperty("name") String name, @JsonProperty("recovery") ArrayList<String> recovery) {
         this.currentRoom = 1;
@@ -47,6 +47,7 @@ public class Player {
         this.recovery = recovery;
         this.currentInventory = new LinkedList<>();
         this.money = 0;
+        this.quests = new ArrayList<Quest>(); //TODO: default add the tutorial quest.
     }
 
     private HashSet<Player> ignoredPlayers = new HashSet<Player>();
@@ -526,5 +527,21 @@ public class Player {
 			return 0;
 		}
 	}
+    }
+    //Updates the quest statuses by evaluating the contents of the string action, which holds information in the following format:
+    //Event type: move, pickup, talk, or rps
+    //If not rps, the second field contains where the user moved, what the user picked up, or who the user talked to, depending on what the type is. 
+    //Tokenized by % marks 
+    public void updateQuests(String action){
+        String[] arr = action.split("%");
+        switch(arr[0]) {
+            case "move": 
+                //todo: for through the arraylist of quests going and updating every quest. If updateQuest returns null it means nothing was updated. If something was updated, we have to remove the quest if it completed the quest, and notify user 
+                //todo: rest of the cases
+        }
+    }
+    //This method updates the arraylist of quests once the user has completed a particular quests. It notifies the user of their actions, and tells them what new quests they have unlocked. 
+    public void updateQuestsCompletion(int questID) {
+        
     }
 }

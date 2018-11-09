@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.Observer;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -58,7 +59,7 @@ public class GameCore implements GameCoreInterface {
         this.dailyLogger = new DailyLogger();
         dailyLogger.write("SERVER STARTED");
         playerList = new PlayerList(); 
-        
+        System.out.println(playerAccountsLocation);        
         // Builds a list of shops mapped to their map id (can be expanded as needed)
         shoplist = new HashMap<Integer,Shop>();
         shoplist.put(new Integer(1), new Shop("Clocktower shop", "The shopping destination for all of your gaming needs."));
