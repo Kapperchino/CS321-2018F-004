@@ -3,44 +3,41 @@
 */
 
 import java.util.*;
-class Quest extends  {
+class Quest {
     private final int questID;
     private final String questName;
     private Graph <Task> tasks;
     private ArrayList<Task> activeTasks;
     private int questStatus;
-    private ArrayList<int> unlockOnCompletionQuestIDs;
-    
+    private ArrayList<Integer> unlockOnCompletionQuestIDs;
+    private Task headNode;
     public class Task {
         private final int taskNumber;
-        private boolean Completed; 
         private boolean isFinalNode;  //The tail node is the singular final node that trips completion of the quest
-        private boolean isCompletableOutOfOrder; //defaults to false.
         private Event completionReq; 
-        public Task(int taskNumber, boolean isFinalNode){
+        public ArrayList<NPC> updatedTalksOnCompletion;
+        public Task(int taskNumber, boolean isFinalNode, String type, String val){
             this.completed = false;
             this.taskNumber = taskNumber;
             this.isFinalNode = isFinalNode;
-            this.isCompletableOutOfOrder = false;
+            this.updatedTalksOnCompletion = new ArrayList<NPC>();
+            switch(type.toLower()) {
+                case "move":
+                    this.completionReq = new MoveEvent(val);    
+                    break;
+                case "pickup":
+                    this.completionReq = new PickupEvent(val);
+                    break;
+                case "talk":
+                    this.completionReq = new TalkEvent(val);
+                    break;
+                case "rpswin":
+                    this.completionReq = new rpsWinEvent();
+                    break;
+            }
         }
         public int getTaskNumber(){ return this.taskNumber; }
         public String getEventType(){ return completionReq.getType(); }
-        public MoveTask(int taskNumber, boolean isFinalNode, String location) {
-            this = new Task(taskNumber, isFinalNode);
-            this.completionReq = new MoveEvent(location);
-        }
-        public PickupTask(int taskNumber, boolean isFinalNode, String itemName) {
-            this = new Task(taskNumber, isFinalNode);
-            this.completionReq = new PickupEvent(itemName);
-        }
-        public TalkTask(int taskNumber, boolean isFinalNode, NPC npc) {
-            this = new Task(taskNumber, isFinalNode);
-            this.completionReq = new TalkEvent(npc);
-        }
-        public rpsWinTask(int taskNumber, boolean isFinalNode) {
-            this = new Task(taskNumber, isFinalNode);
-            this.completionReq - new rpsWinTask();
-        }
         public boolean checkEventCompletion(String val) {
             return completionReq.checkCompletion(val);
         }
@@ -72,7 +69,7 @@ class Quest extends  {
             }  
         }
         //A talk event is tripped when an npc talks to a particular quest npc.
-        public TalkEvent extends Event {
+        public class TalkEvent extends Event {
             public NPC npc;
             public TalkEvent(NPC npc) {
                 this.npc = npc;
@@ -82,7 +79,7 @@ class Quest extends  {
                 return val.equals(npc.getName);
             }
         }
-        public rpsWinEvent extends Event {   
+        public class rpsWinEvent extends Event {   
             public rpsWinEvent(){
                 this.completionString = "You have completed task: Win a game of Rock Paper Scissors";
             }
@@ -92,33 +89,28 @@ class Quest extends  {
         }   
     }
     
-    public Quest(int questID, String questName, Graph<Task> tasks){
-        this.questStatus = -1;
-        unlockOnCompletionQuestIDs = new ArrayList<int>();
-        tasks = null; //Patricks part. 
+    public Quest(){
+        this.questStatus = 0;
+        unlockOnCompletionQuestIDs = new ArrayList<Integer>();
+        tasks = new Graph<Task>(); //Patricks part. 
+        boolean firstNode = true;    
         while(THEREAREMORETASKSTOREAD){
-            ArrayList inbound = new ArrayList<int>(); //TaskNumbers of all tasks that route to this new node. Should be stored in the file. Cycles will break this system
+            ArrayList inbound = new ArrayList<Integer>(); //TaskNumbers of all tasks that route to this new node. Should be stored in the file. Cycles will break this system
             Task t = new Task(VALUESFROMFILE);
             tasks.add(t);
-            int i = inbound.size();
-            while(i>0) {
-                tasks.connect(inbound(i),t);
+            for(int i = 0; i<inbound.size(); i++) {
+                tasks.connect(getTask(inbound.get(i)),t);
                 i--;
             }
-            if(t.isCompletableOutOfOrder){
-                activeTasks.add(t);
-            }
-            while(THEREAREMOREUNLOCKABLEQUESTSUPONCOMPLETION) {
-                
+            if(firstNode){
+                headNode = t;
+                firstNode = false;
             }
         }
-        questID = null;
-        questName = null;
-        activeTasks = new ArrayList<int>();
-        activeTasks.add(); //I need the head node to be added here. 
-         
-    
-
+        questID = VALUEFROMFILE;
+        questName = VALUEFROMFILE;
+        activeTasks = new ArrayList<Task>();
+        activeTasks.add(VALUEFROMFILE); //I need the head node to be added here. 
     }
     public int getQuestID() { return this.questID; } 
     public String updateQuests(String type, String val){
@@ -126,29 +118,36 @@ class Quest extends  {
         int i = 0;
         while(i<activeTasks.size()) {
             Task t = activeTasks.get(i);
-            if(!t.getEventType()!=type) {
+        if(!t.getEventType().equals(type)) {
                 continue; //We only want tasks that match the type parameter
             }
-            
-            //TODO: Update active tasks whenever a task is completed.
-
+            if(t.checkEventCompletion(val)) {
+                activeTasks.remove(t);
+                activeTasks.add(tasks.getOutbound(t));      
+                notify = t.completionReq.completionString;    
+            }
             i++;
         }
-
         return notify;
     }
 
 
     //Iterates through the graph looking for the task of the paramter taskID, returns null if not found.  
+    
+
     public Task getTask(int taskID) {
-        Iterator it = tasks.iterator(); //Damn you java! I want pointers so i dont need o(n) runtime for something that should be o(1)!
-        Task next = null;
-        while(it.hasNext()){
-            next = it.next();
-            if(next.getTaskNumber()==taskID) {
-                return next;
-            }
+        Stack<Task> search = new Stack<Task>();
+        search.add(headNode);
+        while(search.size()>0&&search.peek().getTaskID()!=taskID) {
+                Task t = search.peek();
+                search.pop();
+                
         }
-        return null;
+        if(search.size()==0) {
+            return null;
+        } else {
+            return search(0);
+        }
     }
+
 }
