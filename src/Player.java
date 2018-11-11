@@ -48,6 +48,7 @@ public class Player {
         this.currentInventory = new LinkedList<>();
         this.money = 0;
         this.quests = new ArrayList<Quest>(); //TODO: default add the tutorial quest.
+        //TODO: For through each quest file and instantiate the quests.
     }
 
     private HashSet<Player> ignoredPlayers = new HashSet<Player>();
@@ -536,12 +537,21 @@ public class Player {
         String[] arr = action.split("%");
         switch(arr[0]) {
             case "move": 
-                //todo: for through the arraylist of quests going and updating every quest. If updateQuest returns null it means nothing was updated. If something was updated, we have to remove the quest if it completed the quest, and notify user 
-                //todo: rest of the cases
+            case "pickup":
+            case "talk":
+            case "rpswin":
+                break;
+            default: 
+                System.out.println("Error encountered: invalid quest passing");
+                return;
         }
-    }
-    //This method updates the arraylist of quests once the user has completed a particular quests. It notifies the user of their actions, and tells them what new quests they have unlocked. 
-    public void updateQuestsCompletion(int questID) {
+        for(int i = 0; i<quests.size(); i++) {
+            boolean questComplete = quests.get(i).updateQuests(arr[0],arr[1]);
+            if(questComplete) {
+                System.out.println("You have completed the quest: "+quests.get(i).getQuestName());
+            }    
+        }
+           
         
     }
 }

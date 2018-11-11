@@ -801,7 +801,7 @@ public class GameCore implements GameCoreInterface {
 		}
 		return "You wake up and find yourself at the clock tower, with a lighter burden.";
 	}
-
+/* Deprecated
 	/**
 	 * Attempts to walk forward < distance > times. If unable to make it all the
 	 * way, a message will be returned. Will display LOOK on any partial success.
@@ -809,7 +809,7 @@ public class GameCore implements GameCoreInterface {
 	 * @param name     Name of the player to move
 	 * @param distance Number of rooms to move forward through.
 	 * @return Message showing success.
-	 */
+
 	public String move(String name, int distance) {
 		Player player = this.playerList.findPlayer(name);
 		if (player == null || distance <= 0) {
@@ -834,7 +834,7 @@ public class GameCore implements GameCoreInterface {
 		}
 		return "You stop moving and begin to stand around again.";
 	}
-	
+*/	
 
 
 	/**
@@ -858,8 +858,10 @@ public class GameCore implements GameCoreInterface {
 			this.broadcast(player, player.getName() + " just walked into the area.");
 			Ghost g = new Ghost(player);
 				g.start();
-            player.getReplyWriter().println(this.map.findRoom(player.getCurrentRoom()).toString(playerList, player));
-        } else {
+            String room = this.map.findRoom(player.getCurrentRoom()).toString(PlayerList, player);
+            player.getReplyWriter().println(room);
+            player.updateQuests("move%" + room); 
+      } else {
             String logMessage  = String.format("%s used command MOVE %s [unable to move in direction]", player.getName(), direction.toString());
             player.getReplyWriter().println(room.exitMessage(direction));
             return "You grumble a little and stop moving.";
@@ -867,14 +869,6 @@ public class GameCore implements GameCoreInterface {
         return "You stop moving and begin to stand around again.";
 	}
 
-	/**
-	 * Attempts to pick up an object < target >. Will return a message on any
-	 * success or failure.
-	 * 
-	 * @param name   Name of the player to move
-	 * @param target The case-insensitive name of the object to pickup.
-	 * @return Message showing success.
-	 */
     /**
      * Attempts to pick up an object < target >. Will return a message on any success or failure.
      * @param name Name of the player to move
@@ -890,6 +884,7 @@ public class GameCore implements GameCoreInterface {
                 if(object != null) {
                     player.addObjectToInventory(object);
                     this.broadcast(player, player.getName() + " bends over to pick up a " + target + " that was on the ground.");
+                    player.updateQuests("pickup%"+target);
                     return "You bend over and pick up a " + target + ".";
                 }
                 else {

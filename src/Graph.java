@@ -4,7 +4,7 @@ public class Graph<T> {
     private ArrayList<Node> nodes;
     public class Node {
         private T value;
-        private ArrayList<Node> connections;
+        private ArrayList<Node> connections; //Outgoing connections
         public Node (T value) {
             this.value = value;
             connections = new ArrayList<Node>();
@@ -15,12 +15,8 @@ public class Graph<T> {
         public void setValue(T newValue) {
             this.value = newValue;
         }
-        public void connect(Node from, Node to) {
-            from.connections.add(to);    
-        }
-        public void doubleConnect(Node from, Node to) {
-            connect(from,to);
-            connect(to,from);
+        public void connect (Node to) {
+            connections.add(to);    
         }
         public ArrayList<Node> getOutbound() {
             ArrayList<Node> n = new ArrayList<Node>();
@@ -35,7 +31,7 @@ public class Graph<T> {
     public <T> Graph () {
         this.size = 0;
     }
-    public void newNode(T value) {
+    public void add(T value) {
         nodes.add(new Node(value));
         this.size++;
     }
@@ -50,5 +46,25 @@ public class Graph<T> {
     }
     public boolean contains(T value) {
         return indexOf(value)!=-1;
+    }
+    
+    public ArrayList<T> getOutbound(T value) {
+        ArrayList<T> values = new ArrayList<T>();
+        int x = indexOf(value);
+        if(x == -1) {
+            return values;
+        }
+        ArrayList<Node> nodes = nodes.get(x).getOutbound();
+        for(int i = 0; i< nodes.size(); i++) {
+            values.add(nodes.get(i).getValue());
+        }
+    }
+    public void connect(T from, T to) {
+        Node fromNode = nodes.get(indexOf(from));
+        Node toNode = nodes.get(indexOf(to));
+        if(fromNode==null||toNode==null) {
+            return;
+        }
+        fromNode.connect(toNode);    
     }
 }

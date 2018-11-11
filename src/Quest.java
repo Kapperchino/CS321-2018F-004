@@ -17,11 +17,10 @@ class Quest {
         private Event completionReq; 
         public ArrayList<NPC> updatedTalksOnCompletion;
         public Task(int taskNumber, boolean isFinalNode, String type, String val){
-            this.completed = false;
             this.taskNumber = taskNumber;
             this.isFinalNode = isFinalNode;
             this.updatedTalksOnCompletion = new ArrayList<NPC>();
-            switch(type.toLower()) {
+            switch(type.toLowerCase()) {
                 case "move":
                     this.completionReq = new MoveEvent(val);    
                     break;
@@ -45,6 +44,7 @@ class Quest {
             private String type;
             public String completionString;
             public String getType() { return this.type; }
+            public boolean checkCompletion(String val) {} //Needed so the child classes can overload this.
         } //This exists so that We can store Events in general.
         //A move event is tripped when a Player moves to a particular spot (String location)
         public class MoveEvent extends Event {
@@ -62,7 +62,7 @@ class Quest {
             public String itemName;
             public PickupEvent(String itemName){
                 this.itemName = itemName;
-                this.completiongString = "You have completed task: find a " + itemName; 
+                this.completionString = "You have completed task: find a " + itemName; 
             }  
             public boolean checkCompletion(String val) {
                 return val.equals(itemName);
@@ -70,13 +70,13 @@ class Quest {
         }
         //A talk event is tripped when an npc talks to a particular quest npc.
         public class TalkEvent extends Event {
-            public NPC npc;
-            public TalkEvent(NPC npc) {
-                this.npc = npc;
-                this.completionString = "You have completed task: Talk to " +npc.getName();
+            public String npcName;
+            public TalkEvent(String npcName) {
+                this.npcName = npcName;
+                this.completionString = "You have completed task: Talk to " + npcName;
             }
             public boolean checkCompletion(String val) {
-                return val.equals(npc.getName);
+                return val.equals(npcName);
             }
         }
         public class rpsWinEvent extends Event {   
@@ -88,7 +88,9 @@ class Quest {
             }
         }   
     }
-    
+    public String getQuestName(){
+        return this.questName;
+    }
     public Quest(){
         this.questStatus = 0;
         unlockOnCompletionQuestIDs = new ArrayList<Integer>();
@@ -113,8 +115,7 @@ class Quest {
         activeTasks.add(VALUEFROMFILE); //I need the head node to be added here. 
     }
     public int getQuestID() { return this.questID; } 
-    public String updateQuests(String type, String val){
-        String notify; //The string that notifies the user that they have completed a task
+    public boolean updateQuests(String type, String val){
         int i = 0;
         while(i<activeTasks.size()) {
             Task t = activeTasks.get(i);
@@ -123,30 +124,38 @@ class Quest {
             }
             if(t.checkEventCompletion(val)) {
                 activeTasks.remove(t);
-                activeTasks.add(tasks.getOutbound(t));      
-                notify = t.completionReq.completionString;    
+                ArrayList<Task> outbound = tasks.getOutbound(t);
+                for(int j = 0; j < outbound.size(); j++) {
+                    activeTasks.add(tasks.getOutbound(t).get(j));
+                }   
+                System.out.println(t.completionReq.completionString);   
+                if(activeTasks.size()==0) {
+                    //Quest completed
+                    return true;
+                }
             }
             i++;
         }
-        return notify;
+        return false;
     }
 
 
     //Iterates through the graph looking for the task of the paramter taskID, returns null if not found.  
-    
-
     public Task getTask(int taskID) {
-        Stack<Task> search = new Stack<Task>();
+        Queue<Task> search = new LinkedList<Task>();
         search.add(headNode);
-        while(search.size()>0&&search.peek().getTaskID()!=taskID) {
+        while(search.size()>0&&search.peek().getTaskNumber()!=taskID) {
                 Task t = search.peek();
-                search.pop();
-                
+                search.remove();
+                ArrayList<Task> outbound = tasks.getOutbound(t); 
+                for(int i = 0; i<outbound.size(); i++) {
+                    search.add(outbound.get(i));
+                }
         }
         if(search.size()==0) {
             return null;
         } else {
-            return search(0);
+            return search.peek();
         }
     }
 
