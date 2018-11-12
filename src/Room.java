@@ -1,4 +1,6 @@
 import java.util.LinkedList;
+import java.lang.StringBuilder;
+import java.lang.IllegalArgumentException; 
 
 /**
  *
@@ -12,17 +14,34 @@ public class Room {
     private final LinkedList<Item> objects;
     private final LinkedList<Exit> exits;
 
-
+    private static final int MAX_WHITEBOARD_LEN = 120;
+    private StringBuilder whiteboard;
+    //list of NPCs in a room, list in case additional NPCs are added to the game
+    private final LinkedList<NPC> npcs;
     //add tem state check for ghoul
     public boolean hasGhoul = false;
+
     
     public Room(int id, String room_type, String title, String description) {
         this.objects = new LinkedList<>();
         this.exits = new LinkedList<>();        
+        this.whiteboard = new StringBuilder(MAX_WHITEBOARD_LEN);
         
         this.id = id;
         this.title = title;
         this.description = description;
+        this.room_type = room_type;
+        this.npcs = new LinkedList<>();
+    }
+
+    public Room(int id, String room_type, String title, String description, LinkedList<NPC> npcs) {
+        this.objects = new LinkedList<>();
+        this.exits = new LinkedList<>();
+        this.whiteboard = new StringBuilder(MAX_WHITEBOARD_LEN);
+        this.id = id;
+        this.title = title;
+        this.description = description;
+        this.npcs = npcs;
         this.room_type = room_type;
     }
     
@@ -32,6 +51,7 @@ public class Room {
         result += ".-------------------------+----------------------\n";
         result += this.getDescription() + "\n";
         result += "...................\n";
+        result += "NPCs in the area: " + this.getNPCs() + "\n";
         result += "Objects in the area: " + this.getObjects() + "\n";
         result += "Players in the area: " + this.getPlayers(playerList) + "\n";
         result += "You see paths in these directions: " + this.getExits() + "\n";
@@ -113,6 +133,15 @@ public class Room {
 		return ret;
         }
     }
+
+    public String getNPCs() {
+        if(this.npcs.isEmpty()) {
+            return "None.";
+        }
+        else {
+            return this.npcs.toString();
+        }
+    }
     
     public void addObject(Item obj) {
         if(this.objects.size() < 5) {
@@ -134,6 +163,60 @@ public class Room {
         return null;
     }
 
+    public LinkedList<Item> removeAllObjects()
+    {
+        LinkedList<Item> newList = new LinkedList<Item>();
+        while(!this.objects.isEmpty())
+        {
+            newList.add(objects.get(0));
+            this.objects.remove(0);
+        }  
+        return newList; 
+    }
+
+    /**
+     *  This method returns the current whiteboard text
+     *   
+     *  @return Current text on whiteboard
+     * 
+     */
+    public String getWhiteboardText() {
+        return whiteboard.toString();
+    }
+
+    /**
+     *  This method adds text to the whiteboard
+     *
+     *  @param Text to add to whiteboard
+     *   
+     *  @return true if text added to whiteboard; false if whiteboard is full 
+     * 
+     */
+    public boolean addWhiteboardText(String textToAdd) {
+
+        if (textToAdd == null) { 
+            throw new IllegalArgumentException("Text can't be null");
+        }
+
+        if (textToAdd.length() + whiteboard.length() > MAX_WHITEBOARD_LEN) {
+            return false;
+        }
+        else {
+            whiteboard.append(textToAdd);
+            return true;
+        }
+    }
+
+    /**
+     *  This method erases the whiteboard
+     *
+     */
+    public void whiteboardErase() {
+        whiteboard.setLength(0);
+    }
+
+
+    
 
     public String getPlayers(PlayerList players) {
         String localPlayers = "";
