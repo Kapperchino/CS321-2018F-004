@@ -1167,9 +1167,9 @@ public class GameCore implements GameCoreInterface {
 			this.broadcast(player, player.getName() + " just walked into the area.");
 			Ghost g = new Ghost(player);
 				g.start();
-            String room = this.map.findRoom(player.getCurrentRoom()).toString(PlayerList, player);
-            player.getReplyWriter().println(room);
-            player.updateQuests("move%" + room); 
+            String roomstr = this.map.findRoom(player.getCurrentRoom()).toString(this.playerList, player);
+            player.getReplyWriter().println(roomstr);
+            player.updateQuests("move%" + roomstr); 
       } else {
             String logMessage  = String.format("%s used command MOVE %s [unable to move in direction]", player.getName(), direction.toString());
             player.getReplyWriter().println(room.exitMessage(direction));

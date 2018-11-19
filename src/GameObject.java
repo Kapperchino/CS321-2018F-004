@@ -281,7 +281,7 @@ public class GameObject extends UnicastRemoteObject implements GameObjectInterfa
      */
     @Override
     public String move(String name, int distance) throws RemoteException {
-        return core.move(name, distance);
+        return "not gonna work";
     }
 
 
