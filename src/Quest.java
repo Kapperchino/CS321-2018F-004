@@ -4,22 +4,12 @@
 
 import java.util.*;
 class Quest {
-    private final int questID;
     private final String questName;
-    private Graph <Task> tasks;
-    private ArrayList<Task> activeTasks;
-    private int questStatus;
-    private ArrayList<Integer> unlockOnCompletionQuestIDs;
-    private Task headNode;
+    private LinkedList <Task> tasks;
+    private Task activeTask;
     public class Task {
-        private final int taskNumber;
-        private boolean isFinalNode;  //The tail node is the singular final node that trips completion of the quest
-        private Event completionReq; 
-        public ArrayList<NPC> updatedTalksOnCompletion;
-        public Task(int taskNumber, boolean isFinalNode, String type, String val){
-            this.taskNumber = taskNumber;
-            this.isFinalNode = isFinalNode;
-            this.updatedTalksOnCompletion = new ArrayList<NPC>();
+        Event completionReq; 
+        public Task(String type, String val){
             switch(type.toLowerCase()) {
                 case "move":
                     this.completionReq = new MoveEvent(val);    
@@ -33,18 +23,28 @@ class Quest {
                 case "rpswin":
                     this.completionReq = new rpsWinEvent();
                     break;
+                case "shopevent":
+                    this.completionReq = new shopEvent();
+                    break;
+                case "sayevent":
+                    this.completionReq = new sayEvent();
+                    break;
+                case "ghoulpokeEvent":
+                    this.completionReq = new ghoulPokeEvent();
             }
         }
-        public int getTaskNumber(){ return this.taskNumber; }
         public String getEventType(){ return completionReq.getType(); }
         public boolean checkEventCompletion(String val) {
             return completionReq.checkCompletion(val);
+        }
+        public String getCompletionString() {
+           return completionReq.completionString;
         }
         abstract public class Event {
             private String type;
             public String completionString;
             public String getType() { return this.type; }
-            public boolean checkCompletion(String val) {} //Needed so the child classes can overload this.
+            public boolean checkCompletion(String val) {return false;} //Needed so the child classes can overload this.
         } //This exists so that We can store Events in general.
         //A move event is tripped when a Player moves to a particular spot (String location)
         public class MoveEvent extends Event {
@@ -65,7 +65,7 @@ class Quest {
                 this.completionString = "You have completed task: find a " + itemName; 
             }  
             public boolean checkCompletion(String val) {
-                return val.equals(itemName);
+                return true;
             }  
         }
         //A talk event is tripped when an npc talks to a particular quest npc.
@@ -83,80 +83,66 @@ class Quest {
             public rpsWinEvent(){
                 this.completionString = "You have completed task: Win a game of Rock Paper Scissors";
             }
-            public boolean checkCompletion(String val) { //Passes a string because it makes all the mehod signatures the same. Helps w/ polymorphism
+            public boolean checkCompletion(String val) { //Passes a string because it makes all the method signatures the same. Helps w/ polymorphism
                 return true;
             }
-        }   
+        } 
+        public class shopEvent extends Event {
+            public shopEvent() { 
+                this.completionString = "You have completed task: Buy from the shop";
+            }            
+            public boolean checkCompletion(String val) {
+                return true;
+            }
+        }
+        public class sayEvent extends Event {
+            public sayEvent() {
+                this.completionString = "You have completed task: say something";
+            }
+            public boolean checkCompletion(String val) {
+                return true;
+            }
+        }
+        public class ghoulPokeEvent extends Event {
+            public ghoulPokeEvent() {
+                this.completionString = "You have completed task: Poke a ghoul";
+            }
+            public boolean checkCompletion(String val) {
+                return true;
+            }
+        }
+        
+      
     }
     public String getQuestName(){
         return this.questName;
     }
-    public Quest(){
-        this.questStatus = 0;
-        unlockOnCompletionQuestIDs = new ArrayList<Integer>();
-        tasks = new Graph<Task>(); //Patricks part. 
-        boolean firstNode = true;    
-        while(THEREAREMORETASKSTOREAD){
-            ArrayList inbound = new ArrayList<Integer>(); //TaskNumbers of all tasks that route to this new node. Should be stored in the file. Cycles will break this system
-            Task t = new Task(VALUESFROMFILE);
-            tasks.add(t);
-            for(int i = 0; i<inbound.size(); i++) {
-                tasks.connect(getTask(inbound.get(i)),t);
-                i--;
-            }
-            if(firstNode){
-                headNode = t;
-                firstNode = false;
-            }
+    public Quest(String questName){
+        tasks = new LinkedList<Task>();
+        //Add the tasks in. Im not sure what they look like.
+        this.questName = questName;
+        tasks.add(new Task("move", "Exploratory Hall"));
+        tasks.add(new Task("shopevent", ""));
+        tasks.add(new Task("pickupevent", ""));
+        /*    
+        tasks.add(new Task("sayevent", ""));
+        tasks.add(new Task("ghoulpokeevent",""));
+        tasks.add(new Task("talkevent","professor"));
+        tasks.add(new Task("rpswinevent", ""));
+        */
+    } 
+    public int updateQuests(String type, String val){
+        if(!activeTask.getEventType().equals(type)) {
+            return 0; //Completed event does not match required event
         }
-        questID = VALUEFROMFILE;
-        questName = VALUEFROMFILE;
-        activeTasks = new ArrayList<Task>();
-        activeTasks.add(VALUEFROMFILE); //I need the head node to be added here. 
-    }
-    public int getQuestID() { return this.questID; } 
-    public boolean updateQuests(String type, String val){
-        int i = 0;
-        while(i<activeTasks.size()) {
-            Task t = activeTasks.get(i);
-        if(!t.getEventType().equals(type)) {
-                continue; //We only want tasks that match the type parameter
+        if(activeTask.checkEventCompletion(val)) {
+            System.out.println(activeTask.getCompletionString());
+            tasks.remove(activeTask);
+            if(tasks.size()==0) {
+                return 2; //Task completed, which finished the quest
             }
-            if(t.checkEventCompletion(val)) {
-                activeTasks.remove(t);
-                ArrayList<Task> outbound = tasks.getOutbound(t);
-                for(int j = 0; j < outbound.size(); j++) {
-                    activeTasks.add(tasks.getOutbound(t).get(j));
-                }   
-                System.out.println(t.completionReq.completionString);   
-                if(activeTasks.size()==0) {
-                    //Quest completed
-                    return true;
-                }
-            }
-            i++;
+            activeTask = tasks.get(0);
         }
-        return false;
-    }
-
-
-    //Iterates through the graph looking for the task of the paramter taskID, returns null if not found.  
-    public Task getTask(int taskID) {
-        Queue<Task> search = new LinkedList<Task>();
-        search.add(headNode);
-        while(search.size()>0&&search.peek().getTaskNumber()!=taskID) {
-                Task t = search.peek();
-                search.remove();
-                ArrayList<Task> outbound = tasks.getOutbound(t); 
-                for(int i = 0; i<outbound.size(); i++) {
-                    search.add(outbound.get(i));
-                }
-        }
-        if(search.size()==0) {
-            return null;
-        } else {
-            return search.peek();
-        }
-    }
-
+        return 1; //Task completed, but quest is not completed
+    }  
 }

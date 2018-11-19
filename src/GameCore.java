@@ -459,12 +459,13 @@ public class GameCore implements GameCoreInterface {
     		}
     	}
     	
-    	
+        player.updateQuests("shop%"+itemName);	
     	player.addObjectToInventory(item);
     
     	val = item.getPrice() * 1.2;
     	player.changeMoney(-val);
-    	return "Thank you, that will be $" + val + ".";
+    	
+        return "Thank you, that will be $" + val + ".";
     }
 
     /**
@@ -1783,6 +1784,7 @@ public class GameCore implements GameCoreInterface {
             NPC npc = room.getNPCs().get(npcName);
             if (npc != null) {
                 if (dialogueChoice < npc.getDialogueList().size() && dialogueChoice >= 0) {
+                    player.updateQuests("talk%"+npcName);
                     return npc.getDialogueList().get(dialogueChoice).getResponse(npcName, player.getDialogueIdFromList(npcName, npc.getDialogueList().get(dialogueChoice).getTag(), npc.getDialogueList().get(dialogueChoice).getPrompt()));
                 }
                 return "No dialogue choice by that number.";

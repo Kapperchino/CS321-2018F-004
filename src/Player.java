@@ -45,7 +45,7 @@ public class Player {
     private ArrayList<String> recovery;
     private boolean hasTitle = false; //used for title and use item feature 
     private String playerItemTitle = "";
-    private ArrayList<Quest> quests;    
+    private Quest quest;    
     private final long accountAge;
 
     public Player(@JsonProperty("name") String name, @JsonProperty("accountAge") long accountAge) {
@@ -55,8 +55,7 @@ public class Player {
         this.accountAge = accountAge;
         this.currentInventory = new LinkedList<>();
         this.money = 0;
-        this.quests = new ArrayList<Quest>(); //TODO: default add the tutorial quest.
-        //TODO: For through each quest file and instantiate the quests.
+        this.quest = new Quest("Tutorial Quest");
         this.recovery = new ArrayList<String>();
     }
 
@@ -671,19 +670,22 @@ public class Player {
             case "pickup":
             case "talk":
             case "rpswin":
+            case "ghoulpoke":
+            case "shop":
                 break;
             default: 
                 System.out.println("Error encountered: invalid quest passing");
                 return;
-        }
-        for(int i = 0; i<quests.size(); i++) {
-            boolean questComplete = quests.get(i).updateQuests(arr[0],arr[1]);
-            if(questComplete) {
-                System.out.println("You have completed the quest: "+quests.get(i).getQuestName());
-            }    
-        }
-           
-        
+            }
+            int completionStatus = quest.updateQuests(arr[0],arr[1]);
+            if(completionStatus==0) {
+                return;
+            } else {
+                updateDialogueList("questNPC", arr[0], 1);
+            }
+            if(completionStatus==2) {
+                System.out.println("You have completed the quest: "+quest.getQuestName());
+            }
     }
 
     //Feature 413 Prefix
